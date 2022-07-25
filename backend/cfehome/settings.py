@@ -22,6 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-zey9tc&-5(ki_*9))hsi7_q!b#fkf%4!cvy9=z$eir8ax2m&lc'
 
+REST_FRAMEWORK = {
+  'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+}
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -37,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework_swagger',
     'rest_framework',
     'api',
     'products'

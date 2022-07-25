@@ -1,6 +1,5 @@
-from turtle import title
 from django.http import Http404
-from rest_framework import generics
+from rest_framework import generics, mixins, permissions, authentication
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 #from django.http import Http404
@@ -16,6 +15,8 @@ from .serializers import ProductSerializer
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    authentication_classes = [authentication.SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         #cái này khi nào có user sẽ làm
@@ -64,12 +65,57 @@ class ProductDestroyAPIView(generics.DestroyAPIView):
 product_destroy_view = ProductDestroyAPIView.as_view()
 
 
-class ProductListAPIView(generics.ListAPIView):
+# class ProductListAPIView(generics.ListAPIView):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+    
+# product_list_view = ProductListAPIView.as_view()
+
+class ProductMixinView(mixins.ListModelMixin,generics.GenericAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     
-product_list_view = ProductListAPIView.as_view()
+    def get(self, request, *args, **kwargs): #HTTP -> get , va ham nay lay tu thu vien mixins
+        return self.list(request, *args, **kwargs) 
+    
+    # def post(self, request, *args, **kwargs): #HTTP -> Post , va ham nay lay tu thu vien mixins
+    #     return self.list(request, *args, **kwargs) 
+product_mixin_view = ProductMixinView.as_view()
 
+class ProductMixinView(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    generics.GenericAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+    
+    def get(self, request, *args, **kwargs): #HTTP -> get , va ham nay lay tu thu vien mixins
+        print(args,kwargs)
+        pk = kwargs.get("pk")
+        if pk is not None:
+            return self.retrieve(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+    # def post(self, request, *args, **kwargs): #HTTP -> Post , va ham nay lay tu thu vien mixins
+    #     return self.list(request, *args, **kwargs) 
+    
+    def perform_create(self, serializer):
+        #cái này khi nào có user sẽ làm
+        #serializer.save(user=self.request.user)
+        #print(serializer.validated_data)
+        title = serializer.validated_data.get('title')
+        content = serializer.validated_data.get('content') or None
+        if content is None:
+            content = "ABC"
+        serializer.save(content=content)
+    
+    
+product_mixin_view = ProductMixinView.as_view()
 
 
 @api_view(["GET","POST"])
